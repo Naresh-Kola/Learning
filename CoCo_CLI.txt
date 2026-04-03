@@ -1,0 +1,586 @@
+# Cortex Code — Complete Guide
+
+## What Is Cortex Code?
+
+Cortex Code is Snowflake's **AI-driven intelligent agent** integrated into the Snowflake platform, optimized for complex data engineering, analytics, machine learning, and agent-building tasks. It uses an autonomous agent framework to interact directly with your Snowflake environment, with deep understanding of Snowflake's Role-Based Access Control (RBAC), schemas, and best practices.
+
+---
+
+## How Cortex Code Works (Architecture)
+
+```
++-----------------------------------------------------------------------+
+|                        CORTEX CODE PLATFORM                           |
+|                                                                       |
+|   +----------------------------+   +----------------------------+     |
+|   |   Cortex Code in Snowsight |   |    Cortex Code CLI         |     |
+|   |   (Web-based / Browser)    |   |    (Local Terminal)        |     |
+|   |                            |   |                            |     |
+|   |  - SQL & Notebook editing  |   |  - Local file access       |     |
+|   |  - Diff view for changes   |   |  - Git operations          |     |
+|   |  - Inline code suggestions |   |  - Bash commands           |     |
+|   |  - Admin pages integration |   |  - MCP integrations        |     |
+|   |  - @ catalog references    |   |  - Custom skills & agents  |     |
+|   +-------------+--------------+   +-------------+--------------+     |
+|                 |                                 |                    |
+|                 +----------------+----------------+                    |
+|                                  |                                     |
+|                    +-------------v--------------+                      |
+|                    |    Agentic AI Engine        |                      |
+|                    |                             |                      |
+|                    |  - Intent interpretation    |                      |
+|                    |  - Multi-step planning      |                      |
+|                    |  - Tool orchestration       |                      |
+|                    |  - Context management       |                      |
+|                    |  - RBAC-aware execution     |                      |
+|                    +-------------+--------------+                      |
+|                                  |                                     |
+|        +------------+------------+------------+----------+             |
+|        |            |            |            |          |             |
+|   +----v----+ +-----v----+ +----v-----+ +----v---+ +---v-------+     |
+|   |  SQL    | | Snowflake| | Data     | | ML &   | | External  |     |
+|   |  Engine | | Catalog  | | Quality  | | Models | | Tools     |     |
+|   |         | | & Docs   | | (DMFs)   | |        | | (MCP)     |     |
+|   +---------+ +----------+ +----------+ +--------+ +-----------+     |
++-----------------------------------------------------------------------+
+```
+
+---
+
+## Two Interfaces — One Agent
+
+Cortex Code is delivered through **two interfaces** that share the same AI engine:
+
+```
++------------------------------------------+------------------------------------------+
+|       CORTEX CODE IN SNOWSIGHT           |          CORTEX CODE CLI                 |
+|       (Web / Browser)                    |          (Terminal / Shell)               |
++------------------------------------------+------------------------------------------+
+| Best for:                                | Best for:                                |
+|  - SQL authoring in Workspaces           |  - Local repo management (dbt, git)      |
+|  - Notebook creation & editing           |  - Power users & developers              |
+|  - Account administration                |  - CI/CD & automation pipelines          |
+|  - Visual diff review of changes         |  - MCP tool integrations                 |
+|  - Quick catalog exploration             |  - Custom skills & subagents             |
++------------------------------------------+------------------------------------------+
+| Access: Snowsight UI (bottom-right icon) | Access: `cortex` command in terminal     |
+| Auth: Snowsight session                  | Auth: connections.toml                   |
+| File scope: Workspace files              | File scope: Local filesystem + Snowflake |
++------------------------------------------+------------------------------------------+
+```
+
+---
+
+## Key Features at a Glance
+
+### Feature Map
+
+```
+CORTEX CODE FEATURES
+|
++-- CODE GENERATION & DEVELOPMENT
+|   +-- SQL query generation from natural language
+|   +-- Python notebook authoring
+|   +-- dbt project scaffolding & management
+|   +-- Streamlit app creation
+|   +-- Code explanation & optimization
+|
++-- INTELLIGENT DISCOVERY
+|   +-- Natural language schema search
+|   +-- Snowflake documentation Q&A
+|   +-- Marketplace listing search
+|   +-- Tag, masking policy & lineage context
+|
++-- ACCOUNT ADMINISTRATION
+|   +-- Credit consumption analysis
+|   +-- Query performance insights
+|   +-- Governance & security auditing
+|   +-- User & role permissions review
+|
++-- AGENTIC CAPABILITIES
+|   +-- Multi-step task planning & execution
+|   +-- Tool orchestration (SQL, Bash, Git)
+|   +-- Context awareness (active file, role, schema)
+|   +-- Session persistence & resumption
+|
++-- EXTENSIBILITY (CLI)
+|   +-- Custom Skills (SKILL.md files)
+|   +-- Subagents (parallel, background, swarm)
+|   +-- Hooks (lifecycle event interception)
+|   +-- MCP (GitHub, Jira, databases, etc.)
+|
++-- AI CODE SUGGESTIONS (Snowsight Preview)
+    +-- Inline autocomplete as you type
+    +-- Context-aware (query history, schemas)
+    +-- Accept with Shift+Enter, dismiss with Esc
+```
+
+---
+
+## Feature Deep Dive
+
+### 1. Agentic Coding in Workspaces (Snowsight)
+
+Cortex Code operates as a conversational coding assistant within Snowsight Workspaces:
+
+| Capability | Description |
+|---|---|
+| **Code Generation** | Generate SQL queries, create files, build data pipeline logic |
+| **Code Modification** | Refine SQL, find logic/syntax errors, suggest optimizations |
+| **Diff View** | Preview AI-suggested changes (insertions/deletions) before applying |
+| **Code Explanation** | Ask Cortex Code to explain any existing SQL |
+| **Fix SQL Errors** | Click "Fix" in the results grid when a query fails |
+| **@ Catalog Context** | Type `@` to search and add tables/schemas/views as inline context |
+| **Quick Actions** | Highlight SQL text to access Quick Edit, Format, Add to Chat, Explain |
+| **Follow-up Questions** | Continue the conversation to iterate on generated code |
+
+```
+USER WORKFLOW IN SNOWSIGHT
+==========================
+
+  [1] Open Workspace       [2] Open Cortex Code       [3] Type prompt
+       & SQL file       -->    (bottom-right icon)  -->   "Write a query
+                                                           for top 10
+                                                           customers"
+                                    |
+                                    v
+                         [4] Review diff view    [5] Accept or    [6] Execute
+                            (green = added,  -->    modify     -->   the SQL
+                             red = removed)
+```
+
+### 2. Cortex Code CLI — Power User Features
+
+```
+CLI FEATURE ARCHITECTURE
+========================
+
+   cortex (command)
+      |
+      +-- Direct Snowflake Connection
+      |      +-- Execute SQL
+      |      +-- View tables & schemas
+      |      +-- Manage connections (-c flag)
+      |
+      +-- Local File Access
+      |      +-- Read/write local repos
+      |      +-- dbt projects
+      |      +-- Streamlit apps
+      |
+      +-- Tool Orchestration
+      |      +-- Bash commands
+      |      +-- Git operations
+      |      +-- SQL execution
+      |
+      +-- Extensibility
+      |      +-- Skills (.cortex/skills/)
+      |      +-- Subagents (.cortex/agents/)
+      |      +-- Hooks (.cortex/settings.json)
+      |      +-- MCP servers (mcp.json)
+      |
+      +-- Security
+             +-- RBAC enforcement
+             +-- OS-level sandboxing
+             +-- Three-tier approval system
+             +-- Automatic risk assessment
+```
+
+### 3. Skills — Domain-Specific Knowledge
+
+Skills inject specialized instructions into conversations. They are Markdown files stored in `.cortex/skills/` or `.claude/skills/`.
+
+```
+SKILL LOADING PRIORITY (highest to lowest)
+===========================================
+
+  [Project]  .cortex/skills/       <-- Your project-specific skills
+      |
+  [User]     ~/.snowflake/cortex/skills/   <-- Your personal skills
+      |
+  [Global]   ~/.snowflake/cortex/skills/   <-- System-wide skills
+      |
+  [Session]  Added temporarily     <-- One-time skills
+      |
+  [Remote]   Cloned from git       <-- Shared team skills
+      |
+  [Bundled]  Built into Cortex Code <-- Snowflake's built-in skills
+```
+
+### 4. Subagents — Parallel AI Workers
+
+```
+SUBAGENT TYPES
+==============
+
+  +------------------+--------------------------------------------------+
+  | general-purpose  | All tools, complex research, multi-step changes  |
+  +------------------+--------------------------------------------------+
+  | explore          | Fast codebase search (quick/medium/very thorough)|
+  +------------------+--------------------------------------------------+
+  | plan             | Design strategies, evaluate trade-offs           |
+  +------------------+--------------------------------------------------+
+  | feedback         | Structured user input gathering                  |
+  +------------------+--------------------------------------------------+
+  | custom           | Your own agents defined in .cortex/agents/       |
+  +------------------+--------------------------------------------------+
+
+  SWARM PATTERN (parallel execution):
+
+      User Prompt: "Analyze this codebase"
+                |
+       +--------+--------+--------+
+       |        |        |        |
+    Agent 1  Agent 2  Agent 3  Agent 4
+    (APIs)   (Tests)  (Configs) (Docs)
+       |        |        |        |
+       +--------+--------+--------+
+                |
+         Aggregated Results
+```
+
+### 5. Hooks — Lifecycle Event Interception
+
+```
+HOOK EVENT FLOW
+===============
+
+  User submits prompt
+        |
+  [UserPromptSubmit] hook fires
+        |
+  Agent decides to use a tool
+        |
+  [PreToolUse] hook fires -----> Can BLOCK the operation
+        |                         or MODIFY tool inputs
+  Tool executes
+        |
+  [PostToolUse] hook fires -----> Can add context/logging
+        |
+  Response returned to user
+```
+
+### 6. MCP — External Tool Integration
+
+Model Context Protocol connects Cortex Code CLI to external tools:
+
+```
+CORTEX CODE CLI
+     |
+     +-- MCP Protocol
+          |
+          +-- [stdio]  Local tools (Git, file servers)
+          |
+          +-- [http]   Web APIs (GitHub, Jira, Slack)
+          |
+          +-- [sse]    Real-time services (monitoring)
+
+  Configuration: ~/.snowflake/cortex/mcp.json
+
+  Namespacing:  mcp__{server-name}__{tool-name}
+  Example:      mcp__github__search
+```
+
+---
+
+## Access Control Requirements
+
+| Database Role | Purpose |
+|---|---|
+| `SNOWFLAKE.COPILOT_USER` | Required for all users to access Cortex Code |
+| `SNOWFLAKE.CORTEX_USER` | Required (at minimum one of these two) |
+| `SNOWFLAKE.CORTEX_AGENT_USER` | Provides additional agentic workflow capabilities |
+
+---
+
+## Supported Models
+
+| Model | Identifier | Notes |
+|---|---|---|
+| Auto (recommended) | `auto` | Selects the best available model |
+| Claude Opus 4.6 | `claude-opus-4-6` | Highest quality |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` | Balanced quality/speed |
+| Claude Opus 4.5 | `claude-opus-4-5` | Previous generation |
+| Claude Sonnet 4.5 | `claude-sonnet-4-5` | Previous generation |
+| Claude Sonnet 4.0 | `claude-4-sonnet` | Broadest region availability |
+| OpenAI GPT 5.2 | `openai-gpt-5.2` | Preview model |
+
+Switch models during a CLI session with the `/model` command.
+
+---
+
+## Billing
+
+```
+BILLING MODELS
+==============
+
+  Cortex Code in Snowsight
+  +-- Pay-as-you-go (token-based) for existing Snowflake accounts
+
+  Cortex Code CLI
+  +-- Subscription: Free 30-day trial, then monthly subscription
+  |                 (for individual developers via signup.snowflake.com/cortex-code)
+  |
+  +-- Pay-as-you-go: Token-based billing for existing Snowflake accounts
+
+  Note: Warehouse compute & storage costs are billed separately at standard rates.
+```
+
+---
+
+## Cortex Code vs Snowflake Intelligence vs Legacy Copilot
+
+| Feature | Cortex Code | Snowflake Intelligence | Copilot (Legacy) |
+|---|---|---|---|
+| **Use case** | Development & operational workflows | Natural language data Q&A | Basic SQL assistance |
+| **Integration** | Snowsight Workspaces + CLI | Intelligence UI + Cortex Agents API | Separate copilot panel |
+| **Scope** | SQL, notebooks, dbt, admin, ML | Data insights & analysis | Limited SQL/UI help |
+| **Key capability** | Code gen, diff view, tool orchestration | Data summaries & analysis | Contextual SQL suggestions |
+| **Status** | Generally Available | Generally Available | Deprecated |
+
+---
+
+# Cortex Code CLI — Installation Guide
+
+## Prerequisites
+
+Before installing, ensure you have:
+
+- A **Snowflake account** with the `SNOWFLAKE.CORTEX_USER` database role
+- **Snowflake CLI** (`snow` command) installed on your machine
+- One of the supported platforms (see below)
+- Network access to your Snowflake server
+
+### Supported Platforms
+
+```
++--------------------+--------------------+
+|     Platform       |   Architecture     |
++--------------------+--------------------+
+|  macOS             |  arm64, x64        |
+|  Linux             |  x64, arm64        |
+|  Windows (WSL)     |  x64/amd64         |
+|  Windows (Native)  |  x64               |
++--------------------+--------------------+
+```
+
+---
+
+## Installation (Windows Native)
+
+Open **PowerShell** and run:
+
+```powershell
+irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+```
+
+### What This Command Does
+
+| Part | Explanation |
+|------|-------------|
+| `irm` | Short for `Invoke-RestMethod` — downloads the script from the URL |
+| `https://ai.snowflake.com/static/cc-scripts/install.ps1` | The official Snowflake-hosted installation script |
+| `\|` | Pipes the downloaded script to the next command |
+| `iex` | Short for `Invoke-Expression` — executes the downloaded script |
+
+### What Happens After Running
+
+1. The script downloads the latest `cortex` executable
+2. Installs it to `%LOCALAPPDATA%\cortex` (e.g., `C:\Users\YourName\AppData\Local\cortex`)
+3. Adds that directory to your system `PATH` so you can run `cortex` from anywhere
+
+---
+
+## Launching Cortex Code CLI
+
+After installation, you can launch it from **three places**:
+
+### Option 1: PowerShell
+
+```powershell
+PS C:\Users\YourName> cortex
+```
+
+### Option 2: Command Prompt (cmd.exe)
+
+```cmd
+C:\Users\YourName> cortex
+```
+
+### Option 3: Run Dialog (Win+R)
+
+1. Press `Win + R`
+2. Type `cortex`
+3. Press Enter
+
+---
+
+## First-Time Setup: Connect to Snowflake
+
+When you run `cortex` for the first time, a setup wizard walks you through connecting to Snowflake:
+
+```
+$ cortex
+
+Welcome to Cortex Code CLI!
+
+? Choose a connection:
+  > my-snowflake-account
+    staging-account
+    More options...
+```
+
+- Select an existing connection from `~/.snowflake/connections.toml`, OR
+- Choose **More options** to enter your Snowflake account details manually
+
+---
+
+## Example: Your First Prompt
+
+Once connected, type a natural language request:
+
+```
+$ cortex
+
+> What databases do I have access to?
+
+Cortex Code is thinking...
+Running: SHOW DATABASES;
+
+┌──────────────────────┬──────────┐
+│ name                 │ owner    │
+├──────────────────────┼──────────┤
+│ ECOM_ANALYTICS       │ SYSADMIN │
+│ SNOWFLAKE            │          │
+│ SNOWFLAKE_SAMPLE_DATA│          │
+└──────────────────────┴──────────┘
+```
+
+---
+
+## More Example Prompts
+
+### Discover Your Catalog
+
+```
+List every table tagged PII = TRUE in ANALYTICS_DB
+```
+
+```
+Show the lineage from RAW_DB.ORDERS to downstream dashboards
+```
+
+### Generate and Run SQL
+
+```
+Write a query for top 10 customers by revenue
+```
+
+```
+Add a 7-day moving average and show me the results
+```
+
+```
+Explain why this query is slow and optimize it
+```
+
+### Build Applications
+
+```
+Build a Streamlit dashboard on SALES_MART.REVENUE with filters for date and region
+```
+
+```
+Create a dbt project to transform raw sales data
+```
+
+### Work with Cortex Analyst
+
+```
+Use the @models/revenue.yaml semantic model to answer "What was revenue last month?"
+```
+
+---
+
+## Installation on Linux / macOS / WSL
+
+For non-Windows platforms, use:
+
+```bash
+curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
+```
+
+This installs the `cortex` executable to `~/.local/bin` and updates your shell profile's `PATH`.
+
+---
+
+## Useful CLI Options
+
+| Command | Description |
+|---------|-------------|
+| `cortex` | Start a new session |
+| `cortex -c production` | Connect using a specific connection |
+| `cortex --continue` | Resume the last session |
+| `cortex --resume <session_id>` | Resume a specific session |
+| `cortex --plan` | Enable planning mode (confirms each action) |
+
+---
+
+## Key Directories (Windows)
+
+| Path | Purpose |
+|------|---------|
+| `%LOCALAPPDATA%\cortex` | CLI executable |
+| `%USERPROFILE%\.snowflake\connections.toml` | Snowflake connections |
+| `%USERPROFILE%\.snowflake\cortex\settings.json` | CLI settings |
+| `%USERPROFILE%\.snowflake\cortex\conversations\` | Session history |
+
+---
+
+## Supported Models
+
+Cortex Code CLI supports multiple AI models. Use `auto` (default) for best results:
+
+| Model | Identifier |
+|-------|------------|
+| Auto (recommended) | `auto` |
+| Claude Opus 4.6 | `claude-opus-4-6` |
+| Claude Sonnet 4.6 | `claude-sonnet-4-6` |
+| OpenAI GPT 5.2 | `openai-gpt-5.2` |
+
+Switch models during a session with the `/model` command.
+
+
+python -m venv snf
+snf\Scripts\activate
+
+
+pip install pipx
+pipx install snowflake-cli --force
+
+pipx ensurepath
+
+snow --version
+
+New-Item -ItemType Directory -Path "C:\temp" -Force
+$env:TEMP = "C:\temp"
+irm https://ai.snowflake.com/static/cc-scripts/install.ps1 | iex
+
+cortex --version
+
+EKJGUYM-FL96854.snowflakecomputing.com
+
+to remove old connection
+
+Remove-Item "$env:USERPROFILE\.snowflake\connections.toml"
+
+
+
+
+git init
+git add .
+git commit -m "Initial commit: E-Commerce Realtime Pipeline"
+git branch -M main
+git remote add origin https://github.com/Naresh-Kola/Projects.git
+git push -u origin main
+
