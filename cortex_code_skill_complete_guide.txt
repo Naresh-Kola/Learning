@@ -1,0 +1,469 @@
+-- =====================================================================================
+--  CORTEX CODE CLI SKILLS — COMPLETE GUIDE
+-- =====================================================================================
+--  This file explains:
+--    1. WHAT are Cortex Code Skills?
+--    2. WHY do we need them?
+--    3. HOW to create one from scratch (step by step)
+--    4. A REAL-WORLD example: Cost Anomaly Investigator
+--    5. How to TEST and USE the skill
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 1: WHAT ARE SKILLS?
+-- =====================================================================================
+--
+--  Skills are Markdown instruction files (SKILL.md) that teach Cortex Code CLI
+--  specialized workflows. When you invoke a skill, Cortex Code reads the SKILL.md
+--  and follows those instructions to complete your task.
+--
+--  Think of skills as "playbooks" — they turn Cortex Code from a general-purpose
+--  assistant into a domain expert for YOUR specific use case.
+--
+--  ANATOMY OF A SKILL:
+--
+--  .snowflake/cortex/skills/
+--  └── my-skill-name/
+--      └── SKILL.md           <-- The only REQUIRED file
+--
+--  SKILL.md has two parts:
+--
+--  ┌──────────────────────────────────────────────┐
+--  │  ---                                         │  ← YAML frontmatter (metadata)
+--  │  name: my-skill-name                         │
+--  │  description: "When to use this skill..."    │
+--  │  ---                                         │
+--  │                                              │
+--  │  # Instructions                              │  ← Markdown body (the playbook)
+--  │  Step 1: Do this...                          │
+--  │  Step 2: Then this...                        │
+--  │  ```sql                                      │
+--  │  SELECT * FROM ...                           │
+--  │  ```                                         │
+--  └──────────────────────────────────────────────┘
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 2: WHY DO WE NEED SKILLS?
+-- =====================================================================================
+--
+--  WITHOUT Skills:
+--  ┌─────────────────────────────────────────────────────────────────────┐
+--  │  You: "Investigate why our Snowflake costs spiked yesterday"       │
+--  │                                                                     │
+--  │  Cortex Code: *gives a generic answer*                             │
+--  │  - Might check wrong views                                         │
+--  │  - Might miss your cost thresholds                                 │
+--  │  - Doesn't know your warehouse naming conventions                  │
+--  │  - Doesn't follow your team's investigation runbook                │
+--  │  - You have to re-explain the process every time                   │
+--  └─────────────────────────────────────────────────────────────────────┘
+--
+--  WITH Skills:
+--  ┌─────────────────────────────────────────────────────────────────────┐
+--  │  You: "Investigate why our Snowflake costs spiked yesterday"       │
+--  │                                                                     │
+--  │  Cortex Code (using cost-anomaly-investigator skill):              │
+--  │  ✓ Step 1: Queries METERING_HISTORY for 30-day baseline           │
+--  │  ✓ Step 2: Identifies which warehouse caused the spike            │
+--  │  ✓ Step 3: Finds the expensive queries on that warehouse          │
+--  │  ✓ Step 4: Checks for runaway/repeated queries                    │
+--  │  ✓ Step 5: Reviews warehouse configuration                        │
+--  │  ✓ Step 6: Gives actionable recommendations + resource monitor    │
+--  └─────────────────────────────────────────────────────────────────────┘
+--
+--  KEY BENEFITS:
+--
+--  1. CONSISTENCY   — Same investigation workflow every time
+--  2. EFFICIENCY    — No need to re-explain the process
+--  3. TEAM SHARING  — Everyone uses the same playbook
+--  4. BEST PRACTICE — Encodes your org's expertise
+--  5. AUTOMATION    — Complex multi-step workflows in one command
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 3: WHERE TO PUT SKILLS (Priority Order)
+-- =====================================================================================
+--
+--  Skills can live in multiple locations. Cortex Code searches in this order:
+--
+--  ┌──────────────────┬────────────────────────────────────────────────────┐
+--  │  SCOPE           │  PATH                                             │
+--  ├──────────────────┼────────────────────────────────────────────────────┤
+--  │  Project-level   │  .snowflake/cortex/skills/  (in your project)     │
+--  │  User-level      │  ~/.snowflake/cortex/skills/ (your home dir)      │
+--  │  Bundled         │  Built into Cortex Code (read-only)               │
+--  └──────────────────┴────────────────────────────────────────────────────┘
+--
+--  For Snowsight Workspaces:
+--    /.snowflake/cortex/skills/<skill-name>/SKILL.md
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 4: STEP-BY-STEP — CREATE A REAL-WORLD SKILL
+-- =====================================================================================
+--
+--  We'll build: "Cost Anomaly Investigator"
+--  Purpose: Structured investigation when Snowflake costs spike unexpectedly
+--
+-- =====================================================================================
+
+-- -------------------------------------------------------------------------------------
+--  STEP 1: CREATE THE DIRECTORY
+-- -------------------------------------------------------------------------------------
+--
+--  In your terminal (Cortex Code CLI):
+--
+--    mkdir -p .snowflake/cortex/skills/cost-anomaly-investigator
+--
+--  In Snowsight Workspace, the file goes at:
+--    /.snowflake/cortex/skills/cost-anomaly-investigator/SKILL.md
+--
+-- -------------------------------------------------------------------------------------
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 2: WRITE THE YAML FRONTMATTER
+-- -------------------------------------------------------------------------------------
+--
+--  The frontmatter tells Cortex Code WHEN to activate this skill.
+--  The "description" field is used for automatic matching.
+--
+--    ---
+--    name: cost-anomaly-investigator
+--    description: "Investigate Snowflake cost anomalies and unexpected spending
+--                  spikes. Use when: cost spike, billing anomaly, unexpected
+--                  credits, why did costs increase, warehouse spending
+--                  investigation, credit usage jump, diagnose high spending,
+--                  cost root cause analysis."
+--    ---
+--
+--  TIPS FOR GOOD DESCRIPTIONS:
+--    ✓ Include trigger phrases users might say
+--    ✓ Include synonyms (cost = credits = spending = billing)
+--    ✓ Be specific about the domain
+--    ✗ Don't make it too broad ("helps with Snowflake stuff")
+--
+-- -------------------------------------------------------------------------------------
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 3: WRITE THE INSTRUCTIONS (The Playbook)
+-- -------------------------------------------------------------------------------------
+--
+--  This is the main body. Structure it as clear steps with:
+--    - Explanation of what each step does
+--    - SQL queries to execute
+--    - Decision logic (if X then do Y)
+--    - Output formatting rules
+--
+--  The full SKILL.md has been created at:
+--    /.snowflake/cortex/skills/cost-anomaly-investigator/SKILL.md
+--
+--  Here's what each section of our skill does:
+--
+--  ┌────────┬───────────────────────────────────┬──────────────────────────────┐
+--  │  STEP  │  WHAT IT DOES                     │  WHY IT MATTERS              │
+--  ├────────┼───────────────────────────────────┼──────────────────────────────┤
+--  │  1     │  Query 30-day credit baseline     │  Establishes "normal"        │
+--  │  2     │  Identify cost-driving warehouse   │  Narrows the investigation   │
+--  │  3     │  Find expensive queries            │  Pinpoints the root cause    │
+--  │  4     │  Detect runaway/repeated queries   │  Catches automation bugs     │
+--  │  5     │  Check warehouse configuration     │  Finds config-level waste    │
+--  │  6     │  Give recommendations + monitors   │  Prevents future spikes      │
+--  └────────┴───────────────────────────────────┴──────────────────────────────┘
+--
+-- -------------------------------------------------------------------------------------
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 4: ADD RULES AND GUARDRAILS
+-- -------------------------------------------------------------------------------------
+--
+--  At the bottom of SKILL.md, add "Important Rules" to constrain behavior:
+--
+--    ## Important Rules
+--    - Always use SNOWFLAKE.ACCOUNT_USAGE schema (up to 45 min latency)
+--    - Present credit numbers alongside estimated dollar costs ($3/credit)
+--    - Always summarize findings in a table format
+--    - Suggest preventive measures, not just reactive fixes
+--
+--  This ensures the skill behaves consistently and professionally.
+--
+-- -------------------------------------------------------------------------------------
+
+
+-- =====================================================================================
+--  PART 5: TEST THE SKILL — RUN THESE QUERIES TO SEE WHAT THE SKILL DOES
+-- =====================================================================================
+--
+--  The queries below are exactly what the skill instructs Cortex Code to run.
+--  Execute them to see real data from your account.
+-- =====================================================================================
+
+
+-- SKILL STEP 1: Establish 30-day credit consumption baseline
+SELECT
+    DATE_TRUNC('day', START_TIME) AS usage_date,
+    SERVICE_TYPE,
+    SUM(CREDITS_USED) AS total_credits
+FROM SNOWFLAKE.ACCOUNT_USAGE.METERING_HISTORY
+WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+GROUP BY 1, 2
+ORDER BY 1 DESC;
+
+
+-- SKILL STEP 2: Find which warehouse is driving costs (with 7-day comparison)
+SELECT
+    WAREHOUSE_NAME,
+    DATE_TRUNC('day', START_TIME) AS usage_date,
+    SUM(CREDITS_USED) AS credits_used
+FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+GROUP BY 1, 2
+ORDER BY credits_used DESC
+LIMIT 20;
+
+
+-- SKILL STEP 3: Find expensive queries on a specific warehouse (adjust warehouse name)
+SELECT
+    QUERY_ID,
+    USER_NAME,
+    ROLE_NAME,
+    WAREHOUSE_NAME,
+    EXECUTION_STATUS,
+    TOTAL_ELAPSED_TIME / 1000 AS elapsed_seconds,
+    PARTITIONS_SCANNED,
+    BYTES_SCANNED / (1024*1024*1024) AS gb_scanned,
+    LEFT(QUERY_TEXT, 200) AS query_preview
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE START_TIME >= DATEADD('day', -3, CURRENT_TIMESTAMP())
+ORDER BY TOTAL_ELAPSED_TIME DESC
+LIMIT 20;
+
+
+-- SKILL STEP 4: Detect runaway/repeated queries
+SELECT
+    LEFT(QUERY_TEXT, 150) AS query_pattern,
+    USER_NAME,
+    COUNT(*) AS execution_count,
+    SUM(TOTAL_ELAPSED_TIME) / 1000 AS total_elapsed_seconds,
+    AVG(TOTAL_ELAPSED_TIME) / 1000 AS avg_elapsed_seconds,
+    SUM(BYTES_SCANNED) / (1024*1024*1024) AS total_gb_scanned
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE START_TIME >= DATEADD('day', -3, CURRENT_TIMESTAMP())
+GROUP BY 1, 2
+HAVING COUNT(*) > 10
+ORDER BY total_elapsed_seconds DESC
+LIMIT 10;
+
+
+-- SKILL STEP 5: Check warehouse configurations for waste
+SHOW WAREHOUSES;
+
+
+-- SKILL STEP 6: Create a resource monitor (template)
+-- Uncomment and customize to actually create:
+--
+-- CREATE OR REPLACE RESOURCE MONITOR cost_guard
+--   WITH CREDIT_QUOTA = 100
+--   FREQUENCY = DAILY
+--   START_TIMESTAMP = IMMEDIATELY
+--   TRIGGERS
+--     ON 75 PERCENT DO NOTIFY
+--     ON 90 PERCENT DO NOTIFY
+--     ON 100 PERCENT DO SUSPEND;
+--
+-- ALTER WAREHOUSE COMPUTE_WH SET RESOURCE_MONITOR = cost_guard;
+
+
+-- =====================================================================================
+--  PART 6: HOW TO USE THE SKILL
+-- =====================================================================================
+--
+--  IN CORTEX CODE CLI (Terminal):
+--  ──────────────────────────────
+--  The skill auto-activates based on your query. Just ask naturally:
+--
+--    > "Why did our Snowflake costs spike yesterday?"
+--    > "Investigate the billing anomaly from last week"
+--    > "Our credit usage jumped 3x, what happened?"
+--
+--  The description field in the SKILL.md frontmatter determines when
+--  the skill activates. It matches against your natural language query.
+--
+--
+--  IN SNOWSIGHT WORKSPACE:
+--  ──────────────────────────
+--  Skills in /.snowflake/cortex/skills/ are available to the Cortex Code
+--  assistant in the workspace. Ask cost-related questions and it will
+--  follow the skill's investigation workflow.
+--
+--
+--  SKILL FILE LOCATION:
+--  ──────────────────────
+--  The SKILL.md has been created at:
+--    /.snowflake/cortex/skills/cost-anomaly-investigator/SKILL.md
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 7: SKILL WRITING BEST PRACTICES
+-- =====================================================================================
+--
+--  DO:
+--  ✓ Use clear step numbers (Step 1, Step 2...)
+--  ✓ Include actual SQL queries the AI should run
+--  ✓ Add decision logic ("if X > threshold, then investigate Y")
+--  ✓ Specify output format (tables, summaries, recommendations)
+--  ✓ Add guardrails ("Never run DROP commands", "Always use LIMIT")
+--  ✓ Include trigger keywords in the description field
+--  ✓ Keep each step focused on one task
+--
+--  DON'T:
+--  ✗ Write vague instructions ("look at the data")
+--  ✗ Skip SQL templates (the AI needs concrete queries)
+--  ✗ Forget guardrails (the AI might do unexpected things)
+--  ✗ Make the description too broad (it won't activate correctly)
+--  ✗ Put multiple unrelated workflows in one skill
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 8: MORE SKILL IDEAS FOR YOUR TEAM
+-- =====================================================================================
+--
+--  ┌──────────────────────────────────┬───────────────────────────────────────────┐
+--  │  SKILL NAME                      │  WHAT IT DOES                             │
+--  ├──────────────────────────────────┼───────────────────────────────────────────┤
+--  │  data-quality-checker            │  Profile tables, check nulls, duplicates  │
+--  │  migration-validator             │  Compare row counts/checksums pre/post    │
+--  │  role-access-auditor             │  Audit who has access to what             │
+--  │  query-performance-tuner         │  Find slow queries and suggest fixes      │
+--  │  pipeline-health-monitor         │  Check task/stream health and failures    │
+--  │  schema-change-detector          │  Detect DDL changes in the last N days    │
+--  │  data-freshness-checker          │  Alert if tables haven't been updated     │
+--  │  warehouse-right-sizer           │  Recommend optimal warehouse sizes        │
+--  └──────────────────────────────────┴───────────────────────────────────────────┘
+--
+-- =====================================================================================
+
+
+-- =====================================================================================
+--  PART 9: SKILL IN ACTION — "Why did my costs spike?"
+-- =====================================================================================
+--  Below are the exact 6 steps the cost-anomaly-investigator skill executes.
+--  Run each step sequentially. Each step's output feeds the next.
+--  NOTE: ACCOUNT_USAGE views have up to 45 minutes of latency.
+-- =====================================================================================
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 1: ESTABLISH THE 30-DAY BASELINE
+--  Purpose: Understand your normal daily spending pattern
+-- -------------------------------------------------------------------------------------
+SELECT
+    DATE_TRUNC('day', START_TIME)  AS usage_date,
+    SERVICE_TYPE,
+    SUM(CREDITS_USED)             AS total_credits,
+    ROUND(SUM(CREDITS_USED) * 3, 2) AS estimated_cost_usd
+FROM SNOWFLAKE.ACCOUNT_USAGE.METERING_HISTORY
+WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+GROUP BY 1, 2
+ORDER BY 1 DESC;
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 2: IDENTIFY THE COST-DRIVING WAREHOUSE
+--  Purpose: Find which warehouse caused the spike with 7-day avg comparison
+-- -------------------------------------------------------------------------------------
+SELECT
+    WAREHOUSE_NAME,
+    DATE_TRUNC('day', START_TIME) AS usage_date,
+    SUM(CREDITS_USED)            AS credits_used,
+    ROUND(SUM(CREDITS_USED) * 3, 2) AS estimated_cost_usd
+FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+WHERE START_TIME >= DATEADD('day', -30, CURRENT_TIMESTAMP())
+GROUP BY 1, 2
+ORDER BY credits_used DESC
+LIMIT 20;
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 3: FIND THE EXPENSIVE QUERIES
+--  Purpose: Pinpoint the exact queries that drove the cost
+--  ACTION: Replace <YOUR_WAREHOUSE> with the warehouse name from Step 2
+-- -------------------------------------------------------------------------------------
+SELECT
+    QUERY_ID,
+    USER_NAME,
+    ROLE_NAME,
+    WAREHOUSE_NAME,
+    EXECUTION_STATUS,
+    TOTAL_ELAPSED_TIME / 1000                AS elapsed_seconds,
+    CREDITS_USED_CLOUD_SERVICES,
+    PARTITIONS_SCANNED,
+    PARTITIONS_TOTAL,
+    ROUND(BYTES_SCANNED / (1024*1024*1024), 2) AS gb_scanned,
+    LEFT(QUERY_TEXT, 200)                    AS query_preview
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE WAREHOUSE_NAME = '<YOUR_WAREHOUSE>'   -- << REPLACE THIS
+  AND START_TIME >= DATEADD('day', -3, CURRENT_TIMESTAMP())
+ORDER BY TOTAL_ELAPSED_TIME DESC
+LIMIT 20;
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 4: DETECT RUNAWAY / REPEATED QUERIES
+--  Purpose: Find automation bugs, stuck loops, or mis-configured tasks
+--  ACTION: Replace <YOUR_WAREHOUSE> with the warehouse name from Step 2
+-- -------------------------------------------------------------------------------------
+SELECT
+    LEFT(QUERY_TEXT, 150)                          AS query_pattern,
+    USER_NAME,
+    COUNT(*)                                       AS execution_count,
+    ROUND(SUM(TOTAL_ELAPSED_TIME) / 1000, 1)      AS total_elapsed_seconds,
+    ROUND(AVG(TOTAL_ELAPSED_TIME) / 1000, 1)      AS avg_elapsed_seconds,
+    ROUND(SUM(BYTES_SCANNED) / (1024*1024*1024), 2) AS total_gb_scanned
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE START_TIME >= DATEADD('day', -3, CURRENT_TIMESTAMP())
+  AND WAREHOUSE_NAME = '<YOUR_WAREHOUSE>'   -- << REPLACE THIS
+GROUP BY 1, 2
+HAVING COUNT(*) > 10
+ORDER BY total_elapsed_seconds DESC
+LIMIT 10;
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 5: CHECK WAREHOUSE CONFIGURATION
+--  Purpose: Find misconfigurations contributing to waste
+--  Look for: auto_suspend > 300, oversized warehouses, aggressive scaling
+-- -------------------------------------------------------------------------------------
+SHOW WAREHOUSES;
+
+
+-- -------------------------------------------------------------------------------------
+--  STEP 6: APPLY RECOMMENDATIONS — CREATE A RESOURCE MONITOR
+--  Purpose: Prevent future cost spikes with automated alerts and suspension
+--  ACTION: Uncomment and customize before running
+-- -------------------------------------------------------------------------------------
+
+-- CREATE OR REPLACE RESOURCE MONITOR cost_guard
+--   WITH CREDIT_QUOTA = 100
+--   FREQUENCY = DAILY
+--   START_TIMESTAMP = IMMEDIATELY
+--   TRIGGERS
+--     ON 75 PERCENT DO NOTIFY
+--     ON 90 PERCENT DO NOTIFY
+--     ON 100 PERCENT DO SUSPEND;
+
+-- ALTER WAREHOUSE COMPUTE_WH SET RESOURCE_MONITOR = cost_guard;
